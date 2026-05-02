@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Leser">
+<meta name="theme-color" content="#1a1208">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Das kunstseidene Mädchen</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --paper-dark: #ece5d3;
+    --accent: #8b3a2a;
+    --accent-light: #c4614e;
+    --gold: #b8962e;
+    --shadow: rgba(26,18,8,0.15);
+    --popup-bg: #1a1208;
+    --popup-text: #f5f0e8;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background: var(--paper-dark);
+    color: var(--ink);
+    font-family: 'EB Garamond', Georgia, serif;
+    display: flex;
+    flex-direction: column;
+    padding-top: var(--safe-top);
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(184,150,46,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(139,58,42,0.06) 0%, transparent 50%);
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+  .screen.active { display: flex; }
+
+  /* ── SETUP SCREEN ── */
+  #setupScreen {
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .setup-logo {
+    text-align: center;
+  }
+
+  .setup-logo::before {
+    content: '✦';
+    font-size: 1rem;
+    color: var(--gold);
+    display: block;
+    letter-spacing: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .setup-logo h1 {
+    font-size: 1.6rem;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .setup-logo p {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 0.3rem;
+  }
+
+  .setup-card {
+    background: var(--paper);
+    border-radius: 10px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 4px 24px var(--shadow);
+    border-top: 3px solid var(--gold);
+  }
+
+  .setup-card h2 {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+
+  .setup-card p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: 1rem;
+    opacity: 0.75;
+  }
+
+  .setup-card a {
+    color: var(--accent);
+  }
+
+  #apiKeyInput {
+    width: 100%;
+    background: var(--paper-dark);
+    border: 1px solid rgba(26,18,8,0.2);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.85rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 0.8rem;
+  }
+
+  #apiKeyInput:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.7rem 1.6rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .btn-primary:active { background: var(--accent-light); }
+
+  .setup-skip {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.68rem;
+    color: rgba(26,18,8,0.4);
+    text-align: center;
+    cursor: pointer;
+    text-decoration: underline;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── MAIN APP SCREEN ── */
+  #appScreen { overflow: hidden; }
+
+  header {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 1rem 3rem 0.8rem;
+    border-bottom: 1px solid rgba(26,18,8,0.12);
+    background: var(--paper);
+    position: relative;
+  }
+
+  header h1 {
+    font-size: 1.2rem;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  header p {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 0.2rem;
+  }
+
+  .header-btn {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+  }
+
+  .header-btn.left { left: 0.5rem; }
+  .header-btn.right { right: 0.5rem; font-family: 'Raleway', sans-serif; font-size: 0.65rem; letter-spacing: 0.05em; }
+
+  .toolbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: var(--paper);
+    border-bottom: 1px solid var(--paper-dark);
+    gap: 0.5rem;
+  }
+
+  .toolbar label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    user-select: none;
+  }
+
+  .toolbar input[type=checkbox] {
+    accent-color: var(--accent);
+    width: 16px; height: 16px;
+  }
+
+  .font-size-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .font-size-ctrl button {
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    width: 26px; height: 26px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    -webkit-appearance: none;
+  }
+
+  .font-size-ctrl button:active { background: var(--accent); color: white; }
+
+  /* ── SCROLLABLE CONTENT ── */
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 1rem 6rem;
+  }
+
+  /* ── TEXT INPUT VIEW ── */
+  #textInputView {
+    padding-top: 1rem;
+  }
+
+  #textInputView label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  #textInput {
+    width: 100%;
+    height: 200px;
+    background: var(--paper);
+    border: 1px solid rgba(26,18,8,0.2);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    font-family: 'EB Garamond', serif;
+    font-size: 1rem;
+    color: var(--ink);
+    resize: none;
+    line-height: 1.7;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  #textInput:focus { border-color: var(--accent); }
+
+  .btn-load {
+    margin-top: 0.6rem;
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.7rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    -webkit-appearance: none;
+  }
+
+  .btn-load:active { background: var(--accent-light); }
+
+  .hint {
+    text-align: center;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    color: rgba(26,18,8,0.4);
+    margin-top: 0.75rem;
+    line-height: 1.6;
+  }
+
+  /* ── READING VIEW ── */
+  #readingView {
+    display: none;
+    padding-top: 1rem;
+  }
+
+  #readingArea {
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 1.5rem 1.2rem;
+    box-shadow: 0 2px 20px var(--shadow), 0 0 0 1px rgba(26,18,8,0.06);
+    line-height: 2;
+    font-size: 1.1rem;
+    position: relative;
+  }
+
+  #readingArea::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--accent), var(--gold));
+    border-radius: 8px 8px 0 0;
+  }
+
+  .word {
+    cursor: pointer;
+    border-radius: 2px;
+    padding: 0 1px;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .word:active, .word.active {
+    background: rgba(139,58,42,0.18);
+    color: var(--accent);
+  }
+
+  /* ── BOTTOM SHEET (word tooltip on mobile) ── */
+  #wordSheet {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--ink);
+    color: var(--popup-text);
+    padding: 1rem 1.5rem calc(1rem + var(--safe-bottom));
+    border-radius: 16px 16px 0 0;
+    border-top: 2px solid var(--gold);
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+    z-index: 200;
+    min-height: 100px;
+  }
+
+  #wordSheet.open { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 36px; height: 4px;
+    background: rgba(245,240,232,0.2);
+    border-radius: 2px;
+    margin: 0 auto 1rem;
+  }
+
+  .sheet-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: none;
+    border: none;
+    color: rgba(245,240,232,0.4);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.2rem;
+  }
+
+  .sheet-label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.3rem;
+  }
+
+  .sheet-original {
+    font-style: italic;
+    color: rgba(245,240,232,0.55);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 0.4rem;
+  }
+
+  .sheet-translation {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--popup-text);
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(245,240,232,0.25);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── NO KEY BANNER ── */
+  #noKeyBanner {
+    display: none;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.72rem;
+    color: #856404;
+    margin-bottom: 0.8rem;
+    text-align: center;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP SCREEN ══ -->
+<div id="setupScreen" class="screen active">
+  <div class="setup-logo">
+    <h1>Das kunstseidene Mädchen</h1>
+    <p>Интерактивный читалка</p>
+  </div>
+
+  <div class="setup-card">
+    <h2>API-ключ Anthropic</h2>
+    <p>Для перевода слов нужен ключ от <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Ключ сохраняется только на этом устройстве.</p>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="btn-primary" onclick="saveApiKey()">Сохранить и начать</button>
+  </div>
+
+  <div class="setup-skip" onclick="skipSetup()">Пропустить (без перевода)</div>
+</div>
+
+<!-- ══ MAIN APP SCREEN ══ -->
+<div id="appScreen" class="screen">
+
+  <header>
+    <button class="header-btn left" id="backBtn" onclick="showTextInput()" style="display:none">←</button>
+    <h1>Das kunstseidene Mädchen</h1>
+    <p>Irmgard Keun</p>
+    <button class="header-btn right" onclick="showSetup()">⚙ Ключ</button>
+  </header>
+
+  <div class="toolbar">
+    <label>
+      <input type="checkbox" id="sentenceMode"> Предложение целиком
+    </label>
+    <div class="font-size-ctrl">
+      <button onclick="changeFontSize(-1)">−</button>
+      <span>Аа</span>
+      <button onclick="changeFontSize(1)">+</button>
+    </div>
+  </div>
+
+  <div class="scroll-area">
+    <!-- Text input view -->
+    <div id="textInputView">
+      <div id="noKeyBanner" onclick="showSetup()">⚠ API-ключ не задан — перевод недоступен. Нажмите, чтобы добавить.</div>
+      <label>Вставьте немецкий текст:</label>
+      <textarea id="textInput" placeholder="Ich will ein Glanz werden..."></textarea>
+      <button class="btn-load" onclick="loadText()">Читать →</button>
+      <p class="hint">Нажмите на слово → перевод слова<br>Включите «Предложение целиком» → перевод предложения</p>
+    </div>
+
+    <!-- Reading view -->
+    <div id="readingView">
+      <div id="readingArea"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ BOTTOM SHEET ══ -->
+<div id="wordSheet">
+  <div class="sheet-handle"></div>
+  <button class="sheet-close" onclick="closeSheet()">✕</button>
+  <div class="sheet-label" id="sheetLabel">Слово</div>
+  <div class="sheet-original" id="sheetOriginal"></div>
+  <div class="sheet-translation" id="sheetTranslation"></div>
+</div>
+
+<script>
+// ── STATE ──
+let apiKey = localStorage.getItem('anthropic_api_key') || '';
+let fontSize = parseInt(localStorage.getItem('fontSize') || '18');
+const cache = {};
+let currentText = localStorage.getItem('lastText') || '';
+
+// ── INIT ──
+function init() {
+  if (apiKey) {
+    enterApp();
+  } else {
+    document.getElementById('setupScreen').classList.add('active');
+  }
+
+  // Restore last text
+  if (currentText) {
+    document.getElementById('textInput').value = currentText;
+  } else {
+    document.getElementById('textInput').value = `Ich will ein Glanz werden. Irgendwie. Ich meine das nicht mit Lampen oder Schaufenstern. Ich meine — es wird mir nichts mehr geschenkt, und ich habe eine Kälte, die ich nicht kannte, und einen Hunger, der mich auseinanderreißt. Aber in mir ist noch etwas, das will nach oben. Und wenn ich es nicht rauslasse, dann ersticke ich.
+
+Sie sagen mir, ich soll vernünftig sein. Was ist vernünftig? Alles aufgeben, was ich will — das ist vernünftig. Aber das Wollen stirbt nicht, nur weil man es begrabt.`;
+  }
+
+  // Service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(console.error);
+  }
+}
+
+// ── SETUP ──
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key.startsWith('sk-')) {
+    alert('Ключ должен начинаться с "sk-ant-..."');
+    return;
+  }
+  apiKey = key;
+  localStorage.setItem('anthropic_api_key', key);
+  enterApp();
+}
+
+function skipSetup() {
+  enterApp();
+}
+
+function enterApp() {
+  document.getElementById('setupScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  document.getElementById('noKeyBanner').style.display = apiKey ? 'none' : 'block';
+}
+
+function showSetup() {
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('setupScreen').classList.add('active');
+  if (apiKey) document.getElementById('apiKeyInput').value = apiKey;
+}
+
+// ── FONT SIZE ──
+function changeFontSize(delta) {
+  fontSize = Math.max(13, Math.min(28, fontSize + delta));
+  localStorage.setItem('fontSize', fontSize);
+  document.getElementById('readingArea').style.fontSize = fontSize + 'px';
+}
+
+// ── VIEWS ──
+function showTextInput() {
+  document.getElementById('readingView').style.display = 'none';
+  document.getElementById('textInputView').style.display = 'block';
+  document.getElementById('backBtn').style.display = 'none';
+}
+
+// ── LOAD TEXT ──
+function splitIntoSentences(text) {
+  return text.match(/[^.!?…\n]+[.!?…]?[\n]?/g) || [text];
+}
+
+function loadText() {
+  const raw = document.getElementById('textInput').value.trim();
+  if (!raw) return;
+
+  localStorage.setItem('lastText', raw);
+
+  const area = document.getElementById('readingArea');
+  area.innerHTML = '';
+  area.style.fontSize = fontSize + 'px';
+
+  const paragraphs = raw.split(/\n+/);
+  paragraphs.forEach(para => {
+    if (!para.trim()) return;
+    const p = document.createElement('p');
+    p.style.marginBottom = '1.2em';
+
+    const sentences = splitIntoSentences(para);
+    sentences.forEach(sent => {
+      if (!sent.trim()) return;
+      const span = document.createElement('span');
+      span.className = 'sentence-block';
+      span.dataset.sentence = sent.trim();
+
+      const tokens = sent.match(/[\wäöüÄÖÜß]+|[^\wäöüÄÖÜß]+/g) || [];
+      tokens.forEach(token => {
+        if (/[\wäöüÄÖÜß]/.test(token)) {
+          const w = document.createElement('span');
+          w.className = 'word';
+          w.textContent = token;
+          w.dataset.word = token;
+          w.addEventListener('click', onWordClick);
+          span.appendChild(w);
+        } else {
+          span.appendChild(document.createTextNode(token));
+        }
+      });
+      p.appendChild(span);
+    });
+    area.appendChild(p);
+  });
+
+  // Switch views
+  document.getElementById('textInputView').style.display = 'none';
+  document.getElementById('readingView').style.display = 'block';
+  document.getElementById('backBtn').style.display = 'block';
+
+  // Scroll to top
+  document.querySelector('.scroll-area').scrollTop = 0;
+}
+
+// ── WORD CLICK ──
+async function onWordClick(e) {
+  e.stopPropagation();
+  const wordEl = e.currentTarget;
+  const word = wordEl.dataset.word;
+  const sentEl = wordEl.closest('.sentence-block');
+  const sentence = sentEl ? sentEl.dataset.sentence : '';
+  const useSentence = document.getElementById('sentenceMode').checked;
+
+  document.querySelectorAll('.word.active').forEach(w => w.classList.remove('active'));
+  wordEl.classList.add('active');
+
+  if (!apiKey) {
+    showSheet(useSentence ? 'Предложение' : 'Слово',
+              useSentence ? sentence : word,
+              '⚠ API-ключ не задан. Нажмите ⚙ Ключ вверху.');
+    return;
+  }
+
+  if (useSentence && sentence) {
+    await translateSentence(sentence);
+  } else {
+    await translateWord(word);
+  }
+}
+
+// ── SHEET ──
+function showSheet(label, original, translation) {
+  document.getElementById('sheetLabel').textContent = label;
+  document.getElementById('sheetOriginal').textContent = original;
+  document.getElementById('sheetTranslation').innerHTML = translation;
+  document.getElementById('wordSheet').classList.add('open');
+}
+
+function closeSheet() {
+  document.getElementById('wordSheet').classList.remove('open');
+  document.querySelectorAll('.word.active').forEach(w => w.classList.remove('active'));
+}
+
+// ── TRANSLATION ──
+async function translateWord(word) {
+  showSheet('Слово', word, '<span class="spinner"></span>');
+  const key = 'w:' + word.toLowerCase();
+  if (cache[key]) { document.getElementById('sheetTranslation').textContent = cache[key]; return; }
+
+  try {
+    const result = await callClaude(`Переведи немецкое слово на русский. Только перевод через запятую, без пояснений. Слово: "${word}"`);
+    cache[key] = result;
+    document.getElementById('sheetTranslation').textContent = result;
+  } catch {
+    document.getElementById('sheetTranslation').textContent = '⚠ Ошибка перевода';
+  }
+}
+
+async function translateSentence(sentence) {
+  showSheet('Предложение', sentence, '<span class="spinner"></span>');
+  const key = 's:' + sentence;
+  if (cache[key]) { document.getElementById('sheetTranslation').textContent = cache[key]; return; }
+
+  try {
+    const result = await callClaude(`Переведи немецкое предложение на русский. Только перевод, без пояснений. Предложение: "${sentence}"`);
+    cache[key] = result;
+    document.getElementById('sheetTranslation').textContent = result;
+  } catch {
+    document.getElementById('sheetTranslation').textContent = '⚠ Ошибка перевода';
+  }
+}
+
+async function callClaude(prompt) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 200,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!response.ok) throw new Error('API error');
+  const data = await response.json();
+  return data.content.map(b => b.text || '').join('').trim();
+}
+
+// Close sheet on backdrop tap
+document.addEventListener('click', e => {
+  const sheet = document.getElementById('wordSheet');
+  if (sheet.classList.contains('open') && !sheet.contains(e.target) && !e.target.classList.contains('word')) {
+    closeSheet();
+  }
+});
+
+init();
+</script>
+</body>
+</html>
