@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#1a1208">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>Reader</title>
+<title>Das kunstseidene Mädchen</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -462,9 +462,9 @@
   </div>
 
   <div class="setup-card">
-    <h2>API-ключ Anthropic</h2>
-    <p>Для перевода слов нужен ключ от <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Ключ сохраняется только на этом устройстве.</p>
-    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <h2>API-ключ Google Gemini</h2>
+    <p>Для перевода нужен бесплатный ключ от <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>. Нажми «Get API key» → «Create API key». Ключ сохраняется только на этом устройстве.</p>
+    <input type="password" id="apiKeyInput" placeholder="AIza..." autocomplete="off" autocorrect="off" spellcheck="false">
     <button class="btn-primary" onclick="saveApiKey()">Сохранить и начать</button>
   </div>
 
@@ -521,7 +521,7 @@
 
 <script>
 // ── STATE ──
-let apiKey = localStorage.getItem('anthropic_api_key') || '';
+let apiKey = localStorage.getItem('gemini_api_key') || '';
 let fontSize = parseInt(localStorage.getItem('fontSize') || '18');
 const cache = {};
 let currentText = localStorage.getItem('lastText') || '';
@@ -538,7 +538,7 @@ function init() {
   if (currentText) {
     document.getElementById('textInput').value = currentText;
   } else {
-    document.getElementById('textInput').value = `Ich will ein werden. Irgendwie. Ich meine das nicht mit Lampen oder Schaufenstern. Ich meine — es wird mir nichts mehr geschenkt, und ich habe eine Kälte, die ich nicht kannte, und einen Hunger, der mich auseinanderreißt. Aber in mir ist noch etwas, das will nach oben. Und wenn ich es nicht rauslasse, dann ersticke ich.
+    document.getElementById('textInput').value = `Ich will ein Glanz werden. Irgendwie. Ich meine das nicht mit Lampen oder Schaufenstern. Ich meine — es wird mir nichts mehr geschenkt, und ich habe eine Kälte, die ich nicht kannte, und einen Hunger, der mich auseinanderreißt. Aber in mir ist noch etwas, das will nach oben. Und wenn ich es nicht rauslasse, dann ersticke ich.
 
 Sie sagen mir, ich soll vernünftig sein. Was ist vernünftig? Alles aufgeben, was ich will — das ist vernünftig. Aber das Wollen stirbt nicht, nur weil man es begrabt.`;
   }
@@ -552,12 +552,12 @@ Sie sagen mir, ich soll vernünftig sein. Was ist vernünftig? Alles aufgeben, w
 // ── SETUP ──
 function saveApiKey() {
   const key = document.getElementById('apiKeyInput').value.trim();
-  if (!key.startsWith('sk-')) {
-    alert('Ключ должен начинаться с "sk-ant-..."');
+  if (!key.startsWith('AIza')) {
+    alert('Ключ должен начинаться с "AIza..."');
     return;
   }
   apiKey = key;
-  localStorage.setItem('anthropic_api_key', key);
+  localStorage.setItem('gemini_api_key', key);
   enterApp();
 }
 
@@ -692,7 +692,7 @@ async function translateWord(word) {
   if (cache[key]) { document.getElementById('sheetTranslation').textContent = cache[key]; return; }
 
   try {
-    const result = await callClaude(`Переведи немецкое слово на русский. Только перевод через запятую, без пояснений. Слово: "${word}"`);
+    const result = await callGemini(`Переведи немецкое слово на русский. Только перевод через запятую, без пояснений. Слово: "${word}"`);
     cache[key] = result;
     document.getElementById('sheetTranslation').textContent = result;
   } catch(err) {
@@ -706,7 +706,7 @@ async function translateSentence(sentence) {
   if (cache[key]) { document.getElementById('sheetTranslation').textContent = cache[key]; return; }
 
   try {
-    const result = await callClaude(`Переведи немецкое предложение на русский. Только перевод, без пояснений. Предложение: "${sentence}"`);
+    const result = await callGemini(`Переведи немецкое предложение на русский. Только перевод, без пояснений. Предложение: "${sentence}"`);
     cache[key] = result;
     document.getElementById('sheetTranslation').textContent = result;
   } catch(err) {
@@ -714,19 +714,14 @@ async function translateSentence(sentence) {
   }
 }
 
-async function callClaude(prompt) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+async function callGemini(prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-calls': 'true'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }]
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 200, temperature: 0.1 }
     })
   });
   if (!response.ok) {
@@ -734,7 +729,7 @@ async function callClaude(prompt) {
     throw new Error(err?.error?.message || `HTTP ${response.status}`);
   }
   const data = await response.json();
-  return data.content.map(b => b.text || '').join('').trim();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 }
 
 // Close sheet on backdrop tap
