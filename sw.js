@@ -1,4 +1,4 @@
-const CACHE_NAME = 'leser-v5';
+const CACHE_NAME = 'leser-v6';
 const ASSETS = [
   './index.html',
   './manifest.json'
